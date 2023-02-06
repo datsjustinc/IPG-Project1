@@ -61,6 +61,7 @@ public class EnemyCube : MonoBehaviour
             newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 7.8f, 1.8f * Time.deltaTime);
         }
         
+        // reset for another attack
         else if (state == MovingPattern.BackAway)
         {
             print("BackAway");

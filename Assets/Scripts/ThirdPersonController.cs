@@ -170,9 +170,21 @@ namespace StarterAssets
             JumpAndGravity();
             GroundedCheck();
             Move();
-            
-            CheckAction();
-            Action();
+
+            if (currentHealth > 0)
+            {
+                CheckAction();
+                Action();
+            }
+            else
+            {
+                _animator.SetBool("hasDied", true);
+                _animator.SetBool("hasKicked1", false);
+                _animator.SetBool("hasKicked2", false);
+                MoveSpeed = 0;
+                transform.eulerAngles = new Vector3(0, 0, 0);
+                print("Death");
+            }
         }
 
         private void LateUpdate()
@@ -423,6 +435,7 @@ namespace StarterAssets
                 print("Kick2");
             }
             
+            /*
             // death move
             if (Input.GetKeyDown(KeyCode.R))
             {
@@ -431,6 +444,7 @@ namespace StarterAssets
                 transform.eulerAngles = new Vector3(0, 0, 0);
                 print("Death");
             }
+            */
         }
 
         /// <summary>
