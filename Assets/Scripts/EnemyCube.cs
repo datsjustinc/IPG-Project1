@@ -20,11 +20,14 @@ public class EnemyCube : MonoBehaviour
 
     private Renderer rend;
 
+    [SerializeField] private GameManager gameManager;
+
     private void Start()
     {
         currentHealth = maxHealth;
         currentTarget = Vector3.up * 0.7f;
         rend = gameObject.GetComponent<Renderer>();
+        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
     }
 
     /// <summary>
@@ -71,12 +74,20 @@ public class EnemyCube : MonoBehaviour
         // Death animation
         else if (state == MovingPattern.Die)
         {
+            rend.material.color = Color.red;
             // enlarged
-            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * 2, Time.deltaTime * 17);
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * 2, Time.deltaTime * 7);
 
             // destroyed when at biggest
             if (transform.localScale == Vector3.one * 2)
             {
+                // remove enemy object from game manager list
+                gameManager.GetEnemies().Remove(gameObject);
+                
+                // increase difficulty 'spawn rate' of enemies in game manager 
+                gameManager.SetDifficulty(1);
+                
+                // destroy enemy
                 Destroy(gameObject);
             }
         }
@@ -154,7 +165,7 @@ public class EnemyCube : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Player") && state != MovingPattern.Die)
         {
             print("Player collision");
             
