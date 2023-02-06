@@ -409,18 +409,21 @@ namespace StarterAssets
         /// </summary>
         private void Action()
         {
+            // first kick move
             if (Input.GetKeyDown(KeyCode.Q))
             {
                 _animator.SetBool("hasKicked1", true);
                 print("Kick1");
             }
             
+            // second kick move
             if (Input.GetKeyDown(KeyCode.E))
             {
                 _animator.SetBool("hasKicked2", true);
                 print("Kick2");
             }
             
+            // death move
             if (Input.GetKeyDown(KeyCode.R))
             {
                 _animator.SetBool("hasDied", true);
@@ -435,34 +438,88 @@ namespace StarterAssets
         /// </summary>
         private void CheckAction()
         {
+            /*
+            // reset animation control variables to be used again
             if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Idle Walk Run Blend"))
             {
                 _animator.SetBool("hasKicked1", false);
                 _animator.SetBool("hasKicked2", false);
                 print("Finished");
             }
-        }
+            */
 
-        private void OnCollisionEnter(Collision collision)
-        {
-            if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Kick") ||
-                _animator.GetCurrentAnimatorStateInfo(0).IsName("Kick2"))
+            if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Kick1"))
             {
-                if (collision.gameObject.CompareTag("Enemy"))
-                {
-                    //collision.gameObject.GetComponent<Healthbar>().UpdateHealth(collision.gameObject.);
-                }
+                _animator.SetBool("hasKicked1", false);
+            }
+
+            if (!_animator.GetCurrentAnimatorStateInfo(0).IsName("Kick1"))
+            {
+                _animator.SetBool("hasKicked2", false);
             }
         }
 
+        /// <summary>
+        /// This function checks for collision with enemy.
+        /// </summary>
+        /// <param name="collision">enemy object</param>
+        private void OnCollisionStay(Collision collision)
+        {
+            // check if player is using animation move when in collision with enemy
+            if (collision.gameObject.CompareTag("Enemy") && (_animator.GetCurrentAnimatorStateInfo(0).IsName("Kick1") ||
+                                                             _animator.GetCurrentAnimatorStateInfo(0).IsName("Kick2")))
+            { 
+                print("Enemy collision");
+                
+                // reduce and update enemy health
+                collision.gameObject.GetComponent<EnemyCube>().SetCurrentHealth(20);
+                float current = collision.gameObject.GetComponent<EnemyCube>().GetCurrentHealth();
+                float max = collision.gameObject.GetComponent<EnemyCube>().GetMaxHealth();
+                collision.gameObject.GetComponent<EnemyCube>().GetHealth().UpdateHealth(current, max);
+                
+                // knock back enemy and reset enum state
+                collision.gameObject.GetComponent<EnemyCube>().state = EnemyCube.MovingPattern.EaseOut;
+                collision.gameObject.GetComponent<EnemyCube>().Reset();
+            }
+        }
+
+        /// <summary>
+        /// This function returns current health of player.
+        /// </summary>
+        /// <returns>player's current health</returns>
         public float GetCurrentHealth()
         {
             return currentHealth;
         }
-        
+
+        /// <summary>
+        /// This function sets player's health.
+        /// </summary>
+        /// <param name="amount">value to modify player's health</param>
+        public void SetCurrentHealth(float amount)
+        {
+            if (currentHealth > 0)
+            {
+                currentHealth -= amount;
+            }
+        }
+
+        /// <summary>
+        /// This function returns player's max health.
+        /// </summary>
+        /// <returns>player's max health</returns>
         public float GetMaxHealth()
         {
             return maxHealth;
+        }
+
+        /// <summary>
+        /// This function returns player's health bar.
+        /// </summary>
+        /// <returns>player's health bar</returns>
+        public Healthbar GetHealth()
+        {
+            return health;
         }
     }
 }

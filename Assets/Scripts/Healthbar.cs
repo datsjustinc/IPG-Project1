@@ -4,7 +4,7 @@ using UnityEngine.Rendering.UI;
 using UnityEngine.UI;
 
 /// <summary>
-/// This class manages health bar status
+/// This class manages health bar status.
 /// </summary>
 public class Healthbar : MonoBehaviour
 {

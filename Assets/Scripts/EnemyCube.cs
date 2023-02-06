@@ -1,29 +1,45 @@
 using System.Collections;
-using System.Collections.Generic;
+using StarterAssets;
 using UnityEngine;
 
+/// <summary>
+/// This class manages enemy AI.
+/// </summary>
 public class EnemyCube : MonoBehaviour
 {
-    private enum MovingPattern { EaseIn, EaseOut, Jump, Idle, Die }
-    [SerializeField] private MovingPattern state;
+    // enemy action states
+    public enum MovingPattern { EaseIn, EaseOut, BackAway, Die }
+    [SerializeField] public MovingPattern state;
     
     private Vector3 currentTarget;
     
     // health bar status
+    [SerializeField] private Healthbar health;
     private float currentHealth;
     private float maxHealth = 100;
+
+    private Renderer rend;
 
     private void Start()
     {
         currentHealth = maxHealth;
-        currentTarget = Vector3.up * 1f;
+        currentTarget = Vector3.up * 0.7f;
+        rend = gameObject.GetComponent<Renderer>();
     }
 
+    /// <summary>
+    /// This function runs every frame and helps manages enemy states.
+    /// </summary>
     private void Update()
     {
-        currentTarget = GameObject.FindGameObjectWithTag("Player").transform.position + Vector3.up * 1f;
-        
-        Vector3 targetDistance = currentTarget - transform.position + Vector3.up * 1f;
+        if (currentHealth <= 0)
+        {
+            state = MovingPattern.Die;
+        }
+
+        currentTarget = GameObject.FindGameObjectWithTag("Player").transform.position + Vector3.up * 0.7f;
+
+        Vector3 targetDistance = currentTarget - transform.position + Vector3.up * 0.7f;
         targetDistance.y = 0;
         Vector3 moveDirection = targetDistance.normalized;
         Vector3 newPosition = Vector3.zero;
@@ -31,45 +47,124 @@ public class EnemyCube : MonoBehaviour
         // easing towards target
         if (state == MovingPattern.EaseIn)
         {
-            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 0.8f, 0.8f * Time.deltaTime);
+            rend.material.color = Color.white;
+
+            print("EaseIn");
+            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 0.5f, 0.5f * Time.deltaTime);
         }
-        
+
         // bouncing back from target
         else if (state == MovingPattern.EaseOut)
         {
-            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 1.8f, 1.2f * Time.deltaTime);
+            print("EaseOut");
+            rend.material.color = Color.red;
+            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 7.8f, 1.8f * Time.deltaTime);
         }
-
-        else if (state == MovingPattern.Jump)
+        
+        else if (state == MovingPattern.BackAway)
         {
-           
+            print("BackAway");
+            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 4f, 1f * Time.deltaTime);
         }
 
-        else if (state == MovingPattern.Idle)
-        {
-            
-        }
-
+        // Death animation
         else if (state == MovingPattern.Die)
         {
-            
-        }
+            // enlarged
+            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * 2, Time.deltaTime * 17);
 
-        transform.position = newPosition;
+            // destroyed when at biggest
+            if (transform.localScale == Vector3.one * 2)
+            {
+                Destroy(gameObject);
+            }
+        }
         
-        if (moveDirection != Vector3.zero)
+        if (currentHealth > 0)
         {
-            transform.rotation = Quaternion.LookRotation(moveDirection, Vector3.up * 1f);
+            // update enemy position in relation to player
+            transform.position = newPosition;
+
+            // update enemy to face direction of player
+            if (moveDirection != Vector3.zero)
+            {
+                transform.rotation = Quaternion.LookRotation(moveDirection, Vector3.up * 0.7f);
+            }
         }
     }
 
+
+    /// <summary>
+    /// This function returns current health of enemy.
+    /// </summary>
+    /// <returns>enemy's current health</returns>
     public float GetCurrentHealth()
     {
         return currentHealth;
     }
 
+    /// <summary>
+    /// This function sets enemies health.
+    /// </summary>
+    /// <param name="amount">value to modify enemy health</param>
+    public void SetCurrentHealth(float amount)
+    {
+        if (currentHealth > 0)
+        {
+            currentHealth -= amount;
+        }
+    }
+
+    /// <summary>
+    /// This function returns enemy's max health.
+    /// </summary>
+    /// <returns>enemy's max health</returns>
     public float GetMaxHealth()
     {
         return maxHealth;
+    }
+
+    /// <summary>
+    /// This function returns enemy's health bar.
+    /// </summary>
+    /// <returns>enemy's health bar</returns>
+    public Healthbar GetHealth()
+    {
+        return health;
+    }
+
+    /// <summary>
+    /// This function initiates the delay in enemy bounce back transition.
+    /// </summary>
+    public void Reset()
+    {
+        StartCoroutine(Wait());
+    }
+
+    /// <summary>
+    /// Function delays enemy bounce back recovery time.
+    /// </summary>
+    /// <returns>number of seconds to wait to execute code</returns>
+    private IEnumerator Wait()
+    {
+        yield return new WaitForSeconds(1f);
+        state = MovingPattern.EaseIn;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            print("Player collision");
+            
+            // reduce and update player health
+            collision.gameObject.GetComponent<ThirdPersonController>().SetCurrentHealth(5);
+            float current = collision.gameObject.GetComponent<ThirdPersonController>().GetCurrentHealth();
+            float max = collision.gameObject.GetComponent<ThirdPersonController>().GetMaxHealth();
+            collision.gameObject.GetComponent<ThirdPersonController>().GetHealth().UpdateHealth(current, max);
+
+            state = MovingPattern.BackAway;
+            Reset();
+        }
     }
 }
