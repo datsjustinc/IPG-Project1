@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Random = UnityEngine.Random;
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
 using UnityEngine.InputSystem;
 #endif
@@ -439,6 +441,28 @@ namespace StarterAssets
                 _animator.SetBool("hasKicked2", false);
                 print("Finished");
             }
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Kick") ||
+                _animator.GetCurrentAnimatorStateInfo(0).IsName("Kick2"))
+            {
+                if (collision.gameObject.CompareTag("Enemy"))
+                {
+                    //collision.gameObject.GetComponent<Healthbar>().UpdateHealth(collision.gameObject.);
+                }
+            }
+        }
+
+        public float GetCurrentHealth()
+        {
+            return currentHealth;
+        }
+        
+        public float GetMaxHealth()
+        {
+            return maxHealth;
         }
     }
 }

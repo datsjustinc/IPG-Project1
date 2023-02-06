@@ -34,12 +34,4 @@ public class Healthbar : MonoBehaviour
         // stores percentage of health bar to show based on fill amount range (0-1)
         target = currentHealth / maxHealth;
     }
-    
-    public float Target
-    {
-        get
-        {
-            return target;
-        }
-    }
 }

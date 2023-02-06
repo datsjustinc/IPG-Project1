@@ -6,35 +6,38 @@ public class EnemyCube : MonoBehaviour
 {
     private enum MovingPattern { EaseIn, EaseOut, Jump, Idle, Die }
     [SerializeField] private MovingPattern state;
-
-    private Vector3 startPosition;
+    
     private Vector3 currentTarget;
-
-    private float movementTimer = 0;
+    
+    // health bar status
+    private float currentHealth;
+    private float maxHealth = 100;
 
     private void Start()
     {
+        currentHealth = maxHealth;
         currentTarget = Vector3.up * 1f;
     }
 
     private void Update()
     {
-        Move();
+        currentTarget = GameObject.FindGameObjectWithTag("Player").transform.position + Vector3.up * 1f;
         
-        Vector3 targetDistance = currentTarget - transform.position;
+        Vector3 targetDistance = currentTarget - transform.position + Vector3.up * 1f;
         targetDistance.y = 0;
         Vector3 moveDirection = targetDistance.normalized;
         Vector3 newPosition = Vector3.zero;
 
+        // easing towards target
         if (state == MovingPattern.EaseIn)
         {
-            movementTimer = Mathf.Min(1, movementTimer + Time.deltaTime);
-            newPosition = startPosition + (currentTarget - startPosition) * (1 - Mathf.Cos((movementTimer * Mathf.PI) / 2));
+            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 0.8f, 0.8f * Time.deltaTime);
         }
-
+        
+        // bouncing back from target
         else if (state == MovingPattern.EaseOut)
         {
-            
+            newPosition = Vector3.Lerp(transform.position, currentTarget + Vector3.back * 1.8f, 1.2f * Time.deltaTime);
         }
 
         else if (state == MovingPattern.Jump)
@@ -60,11 +63,13 @@ public class EnemyCube : MonoBehaviour
         }
     }
 
-    private void Move()
+    public float GetCurrentHealth()
     {
-        startPosition = transform.position;
-        currentTarget = GameObject.FindGameObjectWithTag("Player").transform.position;
-        
-        movementTimer = 0;
+        return currentHealth;
+    }
+
+    public float GetMaxHealth()
+    {
+        return maxHealth;
     }
 }
